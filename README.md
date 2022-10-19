@@ -51,7 +51,7 @@ ZampsMvpProject is the active project.
 Attached to local RPC client listening at '127.0.0.1:8545'...
 Brownie environment is ready.
 >>> from scripts.helpers import setup_dev_accounts, display_affiliates, display_ancestors
->>> affiliate_names = ["felix", "client", "kawika", "skyler", "david"]
+>>> affiliate_names = ["felix", "clint", "kawika", "skyler", "david"]
 >>> dev_accounts = setup_dev_accounts(affiliate_names)
 >>> dev_accounts
 {
