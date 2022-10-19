@@ -1,7 +1,8 @@
-from scripts.helpers import get_accounts
-from brownie import ZampsToken
+from brownie import ZampsToken, config
 
-sample_token_uri = "https://ipfs.io/ipfs/QmaLg75ne665pB2akzUMhx9DcB3mkq71yYffUowsAEWppd"
+from scripts.helpers import get_accounts
+
+sample_token_uri = config["token_uri"]["default"]
 
 
 def main():
