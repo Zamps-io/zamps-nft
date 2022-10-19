@@ -1,8 +1,6 @@
-from brownie import ZampsToken, config
+from brownie import ZampsToken
 
 from scripts.helpers import get_accounts
-
-sample_token_uri = config["token_uri"]["default"]
 
 
 def main():

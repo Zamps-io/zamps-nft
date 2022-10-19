@@ -15,8 +15,6 @@ contract ZampsToken is ERC721, ERC721URIStorage, Ownable, ERC721Enumerable {
 
     uint256 private constant _branchingFactor = 10; // number of business cards each affiliate can distribute
 
-    address private _clientAddress; // the address of the client business that the contract was created for
-
     // Struct to hold affiliate
     struct Affiliate {
         uint256 depth; // the depth of the affiliate in the network (tree) of affiliates
@@ -39,17 +37,20 @@ contract ZampsToken is ERC721, ERC721URIStorage, Ownable, ERC721Enumerable {
     // Mapping from addresses to their direct ancestors in the network in order (not including the contract owner account)
     mapping(address => address[]) private _affiliateAncestors;
 
-    // Temporarily hard coding the URI for the token metadata
-    // TODO - think about how to make the metadata unique/dynamic for each affiliate
-    string private constant _tokenURI =
-        "https://ipfs.io/ipfs/QmYDZGtFVwpjhXqTUn1ZhyBMm5rB9VE9GVAfksWtyWvP1A?filename=ZampsNFT.png";
+    address private _clientAddress; // the address of the client business that the contract was created for
 
-    constructor(address clientAccount) ERC721("ZampsToken", "ZTK") {
+    // TODO - think about how to make the metadata unique/dynamic for each affiliate
+    string private _tokenURI;
+
+    constructor(address clientAccount, string memory clientTokenURI)
+        ERC721("ZampsToken", "ZTK")
+    {
         // mint the original set of business cards to the Zamps client account
         uint256 starting_depth = 0;
 
-        // set the client account address
+        // set the client account address and tokenURI
         _clientAddress = clientAccount;
+        _tokenURI = clientTokenURI;
 
         _createBusinessCardsForAffiliate(
             address(0), // the client account has no parent in the tree, set parent as zero account
@@ -83,6 +84,9 @@ contract ZampsToken is ERC721, ERC721URIStorage, Ownable, ERC721Enumerable {
 
             // mint ther token
             _safeMint(newAffiliateAccount, tokenId);
+
+            // Right now the same tokenURI is used for all affiliates
+            // TODO - make this dynamic in some way?
             _setTokenURI(tokenId, _tokenURI);
 
             // register the token with the affiliate

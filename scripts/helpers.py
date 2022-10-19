@@ -9,11 +9,12 @@ LOCAL_BLOCKCHAIN_ENVIRONMENTS = [
 ]
 
 
-def get_accounts():
+def get_deployment_accounts():
     if network.show_active() in LOCAL_BLOCKCHAIN_ENVIRONMENTS:
         return accounts[0], accounts[1]
-    owner = accounts.add(config["wallets"]["from_owner_key"])
-    client = accounts.add(config["wallets"]["from_client_key"])
+    else:
+        owner = accounts.add(config["wallets"]["from_owner_key"])
+        client = accounts.add(config["wallets"]["from_client_key"])
     return owner, client
 
 
