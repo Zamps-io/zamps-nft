@@ -107,6 +107,10 @@ CLIENT_PRIVATE_KEY=XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX #
 WEB3_INFURA_PROJECT_ID=XXXXXXXXXXXXXXXXXXXXXXXXXX # infura api key (chosen testnet must be activate for this key)
 ```
 
+Run the deploy script for your chosen network:
 
+```
+brownie run scripts/deploy.py --network polygon-test
+```
 
 
