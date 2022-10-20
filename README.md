@@ -8,7 +8,7 @@ Install python. Project was built with v3.9.7 but probably latest version is fin
 Clone the repo and inside the local directory create a python virtual environment:
 
 ```
-python -m venv venv
+➜ python -m venv venv
 ```
 
 Activate and install requirements:
