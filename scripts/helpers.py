@@ -51,8 +51,10 @@ def display_ancestors(zamps_contract, account, names_to_addresses={}):
     ancestors = zamps_contract.ancestorsOf(account)[1:]
     print_str = ""
     for ancestor in ancestors:
-        print_str += f"{ancestor[:3]}...{ancestor[-3:]} "
-        f"({addresses_to_names.get(ancestor)})  ====>  "
+        print_str += (
+            f"{ancestor[:3]}...{ancestor[-3:]} "
+            f"({addresses_to_names.get(ancestor)})  ====>  "
+        )
     print_str += (
         f"{str(account)[:3]}....{str(account)[-3:]} "
         f"({addresses_to_names.get(account)})"
