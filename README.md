@@ -3,7 +3,7 @@
 ## Environment setup
 
 
-Install python. Project was built with v3.9.7 but probably latest version is fine. [pyenv](https://github.com/pyenv/pyenv) is a nice way to manage multiple python versions on a single machine. 
+Install python. Project was built with v3.9.7 but probably latest version is fine. [pyenv](https://github.com/pyenv/pyenv) is a nice way to manage multiple python versions on a single machine.
 
 Clone the repo and inside the local directory create a python virtual environment:
 
@@ -37,7 +37,7 @@ tests/test_zamps_token.py ..                                                    
 
 ```
 
-## Brownie console 
+## Brownie console
 
 To test interacting with the smart contract manually use the brownie console:
 
@@ -93,7 +93,7 @@ Transaction sent: 0xc785ea6580746d389552eaaac9fa5bc3355e3be1dd52e3eb2b198e6b645d
   ZampsToken deployed at: 0x602C71e4DAC47a042Ee7f46E0aee17F94A3bA0B6
 ```
 
-### Testnet 
+### Testnet
 
 To deploy to a test net some additional configuration is required. First choose a test network. The following example uses polygon mumbai testnet.
 
@@ -112,5 +112,3 @@ Run the deploy script for your chosen network:
 ```
 brownie run scripts/deploy.py --network polygon-test
 ```
-
-
