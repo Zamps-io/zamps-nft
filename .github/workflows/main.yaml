@@ -53,6 +53,8 @@ jobs:
 
     - name: Install Requirements
       run: pip install -r requirements.txt
-
+    - name: Update dotenv
+      run: |
+        sed -i '' '/.env/d' brownie-config.yaml
     - name: Run Tests
       run: brownie test
