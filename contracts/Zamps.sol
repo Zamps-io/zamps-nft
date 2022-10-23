@@ -35,7 +35,7 @@ contract ZampsToken is ERC721, ERC721URIStorage, Ownable, ERC721Enumerable {
     mapping(address => uint256[]) private _affiliatedTokens;
 
     // Mapping from addresses to their direct ancestors in the network in order (not including the contract owner account)
-    mapping(address => address[]) private _affiliateAncestors;
+    mapping(address => address payable[]) private _affiliateAncestors;
 
     address private _clientAddress; // the address of the client business that the contract was created for
 
@@ -172,13 +172,13 @@ contract ZampsToken is ERC721, ERC721URIStorage, Ownable, ERC721Enumerable {
         _affiliateAncestors[newAffiliateAccount] = _affiliateAncestors[
             parentAccount
         ];
-        _affiliateAncestors[newAffiliateAccount].push(parentAccount);
+        _affiliateAncestors[newAffiliateAccount].push(payable(parentAccount));
     }
 
     function ancestorsOf(address affiliateAccount)
         public
         view
-        returns (address[] memory)
+        returns (address payable[] memory)
     {
         require(
             balanceOf(affiliateAccount) > 0,
@@ -188,17 +188,18 @@ contract ZampsToken is ERC721, ERC721URIStorage, Ownable, ERC721Enumerable {
         return _affiliateAncestors[affiliateAccount];
     }
 
-    function processCommissions(address affiliateAccount, uint256 priceInWei)
-        public
-        onlyClient
-    {
-        require(
-            balanceOf(affiliateAccount) > 0,
-            "Only affiliates can receive commissions"
-        );
-        // TODO implement commisions calculations and distribution among ancestor affiliates of the purchaser
-    }
+    function distribute(address cardHolder) public payable {
+        address payable[] memory ancestors;
 
+        ancestors = _affiliateAncestors[cardHolder];
+        uint256 payout = msg.value;
+
+        for (uint256 i = ancestors.length - 1; i >= 0; i--) {
+            address payable ancestor = ancestors[i];
+            ancestor.transfer(payout);
+            payout = (payout * 100) / 15; //still got the research about floats...
+        }
+    }
     // The following are required function overrides to resolve multiple inheritance issues.
 
     function _burn(uint256 tokenId)
