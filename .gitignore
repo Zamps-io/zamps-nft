@@ -6,3 +6,5 @@ build/
 reports/
 .env
 venv
+.DS_Store
+.vscode/
