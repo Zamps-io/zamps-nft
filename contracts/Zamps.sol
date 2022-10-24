@@ -194,7 +194,7 @@ contract ZampsToken is ERC721, ERC721URIStorage, Ownable, ERC721Enumerable {
         ancestors = _affiliateAncestors[cardHolder];
         uint256 payout = msg.value;
 
-        for (uint256 i = ancestors.length - 1; i >= 0; i--) {
+        for (uint256 i = ancestors.length - 1; i > 1; i--) {
             address payable ancestor = ancestors[i];
             ancestor.transfer((payout * 8500)/ 10000);
             payout = (payout * 1500) / 10000; //still got the research about floats...
