@@ -189,6 +189,10 @@ contract ZampsToken is ERC721, ERC721URIStorage, Ownable, ERC721Enumerable {
     }
 
     function distribute(address cardHolder) public payable {
+        require(
+            balanceOf(cardHolder) >= 1,
+            "Address is not current an affiliate in the network."
+        );
         address payable[] memory ancestors;
 
         ancestors = _affiliateAncestors[cardHolder];
