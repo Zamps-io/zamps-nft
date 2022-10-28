@@ -239,3 +239,27 @@ contract ZampsToken is ERC721, ERC721URIStorage, Ownable, ERC721Enumerable {
         return super.supportsInterface(interfaceId);
     }
 }
+
+//this is how we can make the TOKEN_URI dynamic. We can start off simple and
+//in the input the business puts the IPFS string to describe their business card
+//later we can take inputs and create the IPFS content url in our code
+
+contract ZampsTokenFactory {
+
+     mapping(address => address) businessOwnersContracts;
+
+        struct Token {
+            address owner;
+            address businessContract;
+        }
+
+        ZampsToken[] public tokens;
+
+    function create(string memory _metaDataUrl) public {
+
+        ZampsToken token = new ZampsToken(msg.sender, _metaDataUrl);
+        tokens.push(token);
+        businessOwnersContracts[msg.sender] = address(token);
+        
+     }
+}
