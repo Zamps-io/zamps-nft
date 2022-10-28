@@ -7,6 +7,7 @@ import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/utils/Counters.sol";
 import "@openzeppelin/contracts/utils/Base64.sol";
+import "@openzeppelin/contracts/utils/Strings.sol";
 
 contract ZampsToken is ERC721, ERC721URIStorage, Ownable, ERC721Enumerable {
     using Counters for Counters.Counter;
@@ -43,8 +44,6 @@ contract ZampsToken is ERC721, ERC721URIStorage, Ownable, ERC721Enumerable {
     string private _baseImageURI =
         "https://bafybeifgbpikn4unzzewsb5p36ydmigbfqcu2pf6ap6dz4s4ckgayif2ua.ipfs.w3s.link/depth_";
 
-    mapping(uint256 => string) private _depthToMetaDataURI; // mapping to cache the metadata URIs for each depth
-
     constructor(address clientAccount) ERC721("ZampsToken", "ZTK") {
         // set the client account address and tokenURI
         _clientAddress = clientAccount;
@@ -61,43 +60,38 @@ contract ZampsToken is ERC721, ERC721URIStorage, Ownable, ERC721Enumerable {
 
     // Generates a tokenURI using Base64 string as the image
     // Returns cached value if metadata for this depth already computed
-    function getDataURI(uint256 depth) public returns (string memory) {
-        // If we've already calculated and stored metadata for this depth
-        // Just return the cached value
-        if (bytes(_depthToMetaDataURI[depth]).length == 0) {
-            return _depthToMetaDataURI[depth];
-        }
-
+    function getDataURI(uint256 depth) public view returns (string memory) {
         // Otherwise compute the metadata json, encode in Base64
         // Cache and return formatted data uri
         string memory name = string(
-            abi.encodePacked("Zamps token depth ", depth)
+            string.concat("Zamps token depth ", Strings.toString(depth))
         );
         string memory description = "Zamps Business Cards";
-        string memory imageURI = string(
-            abi.encodePacked(_baseImageURI, depth, ".png")
+        string memory imageURI = string.concat(
+            _baseImageURI,
+            Strings.toString(depth),
+            ".svg"
         );
 
-        bytes memory metadataJson = abi.encodePacked(
+        string memory metadataJson = string.concat(
             '{"name": "',
             name,
-            '", "description": "',
+            '", ',
+            '"description": "',
             description,
-            '", "image": "',
+            '", ',
+            '"image": "',
             imageURI,
             '"}'
         );
 
-        string memory data_uri = string(
-            abi.encodePacked(
-                "data:application/json;base64,",
-                Base64.encode(metadataJson)
-            )
-        );
-
-        _depthToMetaDataURI[depth] = data_uri;
-
-        return data_uri;
+        return
+            string(
+                abi.encodePacked(
+                    "data:application/json;base64,",
+                    Base64.encode(bytes(metadataJson))
+                )
+            );
     }
 
     // listen to transfer event -> grab the sender and receiver -> mint business cards for receiver
@@ -305,11 +299,7 @@ contract ZampsTokenFactory {
         return _businessOwnersContracts[businessOwner];
     }
 
-    function getTokens()
-        public
-        view
-        returns (ZampsToken[] memory)
-    {
+    function getTokens() public view returns (ZampsToken[] memory) {
         return _tokens;
     }
 }
