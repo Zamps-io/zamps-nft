@@ -5,7 +5,7 @@ from brownie import ZampsTokenFactory
 from scripts.helpers import get_deployment_accounts, is_local_blockchain
 
 
-def deploy_contract():
+def deploy_factory_contract():
     etherscan_token = os.getenv("ETHERSCAN_TOKEN")
     should_publish = bool(etherscan_token) and not is_local_blockchain()
     _, client_account = get_deployment_accounts()
@@ -15,4 +15,4 @@ def deploy_contract():
 
 
 def main():
-    deploy_contract()
+    deploy_factory_contract()
