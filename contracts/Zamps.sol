@@ -230,12 +230,16 @@ contract ZampsToken is ERC721, ERC721URIStorage, Ownable, ERC721Enumerable {
     }
 
     function distribute(address cardHolder) public payable {
+        require(
+            balanceOf(cardHolder) >= 1,
+            "Address is not current an affiliate in the network."
+        );
         address payable[] memory ancestors;
 
         ancestors = _affiliateAncestors[cardHolder];
         uint256 payout = msg.value;
 
-        for (uint256 i = ancestors.length - 1; i >= 0; i--) {
+        for (uint256 i = ancestors.length - 1; i > 1; i--) {
             address payable ancestor = ancestors[i];
             ancestor.transfer((payout * 8500) / 10000);
             payout = (payout * 1500) / 10000; //still got the research about floats...
@@ -276,4 +280,28 @@ contract ZampsToken is ERC721, ERC721URIStorage, Ownable, ERC721Enumerable {
     {
         return super.supportsInterface(interfaceId);
     }
+}
+
+//this is how we can make the TOKEN_URI dynamic. We can start off simple and
+//in the input the business puts the IPFS string to describe their business card
+//later we can take inputs and create the IPFS content url in our code
+
+contract ZampsTokenFactory {
+
+     mapping(address => address) businessOwnersContracts;
+
+        struct Token {
+            address owner;
+            address businessContract;
+        }
+
+        ZampsToken[] public tokens;
+
+    function create(string memory _metaDataUrl) public {
+
+        ZampsToken token = new ZampsToken(msg.sender, _metaDataUrl);
+        tokens.push(token);
+        businessOwnersContracts[msg.sender] = address(token);
+        
+     }
 }
