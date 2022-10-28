@@ -6,6 +6,7 @@ import "@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/utils/Counters.sol";
+import "@openzeppelin/contracts/utils/Base64.sol";
 
 contract ZampsToken is ERC721, ERC721URIStorage, Ownable, ERC721Enumerable {
     using Counters for Counters.Counter;
@@ -39,24 +40,64 @@ contract ZampsToken is ERC721, ERC721URIStorage, Ownable, ERC721Enumerable {
 
     address private _clientAddress; // the address of the client business that the contract was created for
 
-    // TODO - think about how to make the metadata unique/dynamic for each affiliate
-    string private _tokenURI;
+    string private _baseImageURI =
+        "https://bafybeifgbpikn4unzzewsb5p36ydmigbfqcu2pf6ap6dz4s4ckgayif2ua.ipfs.w3s.link/depth_";
 
-    constructor(address clientAccount, string memory clientTokenURI)
-        ERC721("ZampsToken", "ZTK")
-    {
-        // mint the original set of business cards to the Zamps client account
-        uint256 starting_depth = 0;
+    mapping(uint256 => string) private _depthToMetaDataURI; // mapping to cache the metadata URIs for each depth
 
+    constructor(address clientAccount) ERC721("ZampsToken", "ZTK") {
         // set the client account address and tokenURI
         _clientAddress = clientAccount;
-        _tokenURI = clientTokenURI;
+
+        // mint the original set of business cards to the Zamps client account
+        uint256 starting_depth = 0;
 
         _createBusinessCardsForAffiliate(
             address(0), // the client account has no parent in the tree, set parent as zero account
             clientAccount,
             starting_depth
         );
+    }
+
+    // Generates a tokenURI using Base64 string as the image
+    // Returns cached value if metadata for this depth already computed
+    function getDataURI(uint256 depth) public returns (string memory) {
+        // If we've already calculated and stored metadata for this depth
+        // Just return the cached value
+        if (bytes(_depthToMetaDataURI[depth]).length == 0) {
+            return _depthToMetaDataURI[depth];
+        }
+
+        // Otherwise compute the metadata json, encode in Base64
+        // Cache and return formatted data uri
+        string memory name = string(
+            abi.encodePacked("Zamps token depth ", depth)
+        );
+        string memory description = "Zamps Business Cards";
+        string memory imageURI = string(
+            abi.encodePacked(_baseImageURI, depth, ".png")
+        );
+
+        bytes memory metadataJson = abi.encodePacked(
+            '{"name": "',
+            name,
+            '", "description": "',
+            description,
+            '", "image": "',
+            imageURI,
+            '"}'
+        );
+
+        string memory data_uri = string(
+            abi.encodePacked(
+                "data:application/json;base64,",
+                Base64.encode(metadataJson)
+            )
+        );
+
+        _depthToMetaDataURI[depth] = data_uri;
+
+        return data_uri;
     }
 
     // listen to transfer event -> grab the sender and receiver -> mint business cards for receiver
@@ -75,6 +116,9 @@ contract ZampsToken is ERC721, ERC721URIStorage, Ownable, ERC721Enumerable {
         _affiliates.push(newAffilaite);
         _updateAncestors(newAffilaite.account, parentAccount);
 
+        // Set depth dependent tokenURI
+        string memory dataURI = getDataURI(depth); // cache this if depth already reached
+
         // mint a set of business cards to the receiving affiliate
         for (uint256 i = 0; i < _branchingFactor; i++) {
             require(depth <= _maxDepth, "Max depth reached");
@@ -82,12 +126,9 @@ contract ZampsToken is ERC721, ERC721URIStorage, Ownable, ERC721Enumerable {
             _tokenIdCounter.increment();
             _affiliatedTokens[newAffiliateAccount].push(tokenId);
 
-            // mint ther token
+            // mint the token
             _safeMint(newAffiliateAccount, tokenId);
-
-            // Right now the same tokenURI is used for all affiliates
-            // TODO - make this dynamic in some way?
-            _setTokenURI(tokenId, _tokenURI);
+            _setTokenURI(tokenId, dataURI);
 
             // register the token with the affiliate
             _tokenAffiliates[tokenId] = Affiliate({
@@ -196,10 +237,11 @@ contract ZampsToken is ERC721, ERC721URIStorage, Ownable, ERC721Enumerable {
 
         for (uint256 i = ancestors.length - 1; i >= 0; i--) {
             address payable ancestor = ancestors[i];
-            ancestor.transfer((payout * 8500)/ 10000);
+            ancestor.transfer((payout * 8500) / 10000);
             payout = (payout * 1500) / 10000; //still got the research about floats...
         }
     }
+
     // The following are required function overrides to resolve multiple inheritance issues.
 
     function _burn(uint256 tokenId)

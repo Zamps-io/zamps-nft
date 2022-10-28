@@ -7,23 +7,21 @@ DEFAULT_BRANCHING_FACTOR = 10
 
 def test_deploy():
     # Arrange
-    test_token_url = "https://ipfs.io/ipfs/XXXXXXXXXXXXXXXXXX"
     zamps_account, client = get_deployment_accounts()
 
     # Act
-    ZampsToken.deploy(client, test_token_url, {"from": zamps_account})
+    ZampsToken.deploy(client, {"from": zamps_account})
 
 
 def test_transfer_from():
     # Arrange
-    test_token_url = "https://ipfs.io/ipfs/XXXXXXXXXXXXXXXXXX"
     dev_accounts = setup_dev_accounts(["affiliate"])
     zamps = dev_accounts["zamps"]
     client = dev_accounts["client"]
     affiliate = dev_accounts["affiliate"]
 
     # Act
-    zamps_token_contract = ZampsToken.deploy(client, test_token_url, {"from": zamps})
+    zamps_token_contract = ZampsToken.deploy(client, {"from": zamps})
     client_token_balance = zamps_token_contract.balanceOf(client)
     zamps_token_balance = zamps_token_contract.balanceOf(zamps)
 
