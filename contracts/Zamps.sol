@@ -49,6 +49,9 @@ contract ZampsToken is ERC721, ERC721URIStorage, Ownable, ERC721Enumerable {
         // mint the original set of business cards to the Zamps client account
         uint256 starting_depth = 0;
 
+        // client account whitelisted by default
+       distributeWhitelist[clientAccount] = true;
+
         _createBusinessCardsForAffiliate(
             address(0), // the client account has no parent in the tree, set parent as zero account
             clientAccount,
@@ -131,14 +134,6 @@ contract ZampsToken is ERC721, ERC721URIStorage, Ownable, ERC721Enumerable {
         }
     }
 
-    modifier onlyAffiliate(uint256 tokenId) {
-        require(
-            _tokenAffiliates[tokenId].account == _msgSender(),
-            "Caller is not the affiliate"
-        );
-        _;
-    }
-
     function transferFrom(
         address from,
         address to,
@@ -213,7 +208,7 @@ contract ZampsToken is ERC721, ERC721URIStorage, Ownable, ERC721Enumerable {
         return _affiliateAncestors[affiliateAccount];
     }
 
-    function distribute(address cardHolder) public payable {
+    function distribute(address cardHolder) public payable onlyWhitelisted {
         require(
             balanceOf(cardHolder) >= 1,
             "Address is not current an affiliate in the network."
@@ -246,6 +241,19 @@ contract ZampsToken is ERC721, ERC721URIStorage, Ownable, ERC721Enumerable {
         for (uint256 i = 0; i < addressesToRemove.length; i++) {
             delete distributeWhitelist[addressesToRemove[i]];
         }
+    }
+
+    modifier onlyAffiliate(uint256 tokenId) {
+        require(
+            _tokenAffiliates[tokenId].account == _msgSender(),
+            "Caller is not the affiliate"
+        );
+        _;
+    }
+
+    modifier onlyWhitelisted() {
+        require(distributeWhitelist[_msgSender()], "Caller is not whitelisted");
+        _;
     }
 
     // The following are required function overrides to resolve multiple inheritance issues.

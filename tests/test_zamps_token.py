@@ -1,4 +1,5 @@
-from brownie import ZampsToken
+import pytest
+from brownie import ZampsToken, exceptions
 
 from scripts.helpers import get_deployment_accounts, setup_dev_accounts
 
@@ -57,7 +58,6 @@ def test_only_whitelisted_can_distribute():
     client = dev_accounts["client"]
     affiliate = dev_accounts["affiliate"]
     whitelisted_address = dev_accounts["whitelisted_address"]
-    unapproved_address = dev_accounts["unapproved_address"]
     zamps_token_contract = ZampsToken.deploy(client, {"from": zamps})
     zamps_token_contract.transferFrom(client, affiliate, 0, {"from": client})
 
@@ -65,20 +65,30 @@ def test_only_whitelisted_can_distribute():
     tx = zamps_token_contract.distribute(affiliate, {"from": client, "value": 1000})
 
     # Assert
-    assert tx.status.name == "Confirmed"  # client is whitelisted by default
+    # client is whitelisted by default
+    assert tx.status.name == "Confirmed"
+
+    # Act, Assert
+    # fails as address not yet whitelisted
+    with pytest.raises(exceptions.VirtualMachineError):
+        zamps_token_contract.distribute(
+            affiliate, {"from": whitelisted_address, "value": 1000}
+        )
 
     # Act
+    zamps_token_contract.addToWhitelist([whitelisted_address], {"from": zamps})
     tx = zamps_token_contract.distribute(
         affiliate, {"from": whitelisted_address, "value": 1000}
     )
 
     # Assert
-    assert tx.status.name == "Confirmed"  # whitelisted address can distribute
+    # whitelisted address can now distribute
+    assert tx.status.name == "Confirmed"  # client is whitelisted by default
 
-    # Act
-    tx = zamps_token_contract.distribute(
-        affiliate, {"from": unapproved_address, "value": 1000}
-    )
-
-    # Assert
-    assert tx.status.name == "Confirmed"  # non-whitelisted address cannot distribute
+    # Act, Assert
+    # fails after address removed from whitelist
+    zamps_token_contract.removeFromWhitelist([whitelisted_address], {"from": zamps})
+    with pytest.raises(exceptions.VirtualMachineError):
+        zamps_token_contract.distribute(
+            affiliate, {"from": whitelisted_address, "value": 1000}
+        )
