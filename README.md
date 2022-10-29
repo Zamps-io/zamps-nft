@@ -102,10 +102,13 @@ Setup two accounts (one for zamps, one for the client) on e.g. metamask and purc
 Add a .env file with the following to the root of the project directory with the following env vars:
 
 ```
+WEB3_INFURA_PROJECT_ID=XXXXXXXXXXXXXXXXXXXXXXXXXX # infura api key (chosen testnet must be activate for this key)
 ZAMPS_PRIVATE_KEY=XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX # zamps private key
 CLIENT_PRIVATE_KEY=XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX # client private key
-WEB3_INFURA_PROJECT_ID=XXXXXXXXXXXXXXXXXXXXXXXXXX # infura api key (chosen testnet must be activate for this key)
+ETHERSCAN_TOKEN=XXXXXXXXXXXXXXXXXXXXXXXXXXXXX # if you wish to verify on an ethereum network
+POLYGONSCAN_TOKEN=XXXXXXXXXXXXXXXXXXXXXXXXXXXXX # if you wish to verify on a polygon network
 ```
+
 
 Run the deploy script for your chosen network:
 
