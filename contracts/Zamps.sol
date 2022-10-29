@@ -6,6 +6,8 @@ import "@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/utils/Counters.sol";
+import "@openzeppelin/contracts/utils/Base64.sol";
+import "@openzeppelin/contracts/utils/Strings.sol";
 
 contract ZampsToken is ERC721, ERC721URIStorage, Ownable, ERC721Enumerable {
     using Counters for Counters.Counter;
@@ -37,26 +39,57 @@ contract ZampsToken is ERC721, ERC721URIStorage, Ownable, ERC721Enumerable {
     // Mapping from addresses to their direct ancestors in the network in order (not including the contract owner account)
     mapping(address => address payable[]) private _affiliateAncestors;
 
-    address private _clientAddress; // the address of the client business that the contract was created for
+    string private _baseImageURI =
+        "https://bafybeifgbpikn4unzzewsb5p36ydmigbfqcu2pf6ap6dz4s4ckgayif2ua.ipfs.w3s.link/depth_";
 
-    // TODO - think about how to make the metadata unique/dynamic for each affiliate
-    string private _tokenURI;
+    // approved addresses can call distribute function
+    mapping(address => bool) public distributeWhitelist;
 
-    constructor(address clientAccount, string memory clientTokenURI)
-        ERC721("ZampsToken", "ZTK")
-    {
+    constructor(address clientAccount) ERC721("ZampsToken", "ZTK") {
         // mint the original set of business cards to the Zamps client account
         uint256 starting_depth = 0;
-
-        // set the client account address and tokenURI
-        _clientAddress = clientAccount;
-        _tokenURI = clientTokenURI;
 
         _createBusinessCardsForAffiliate(
             address(0), // the client account has no parent in the tree, set parent as zero account
             clientAccount,
             starting_depth
         );
+    }
+
+    // Generates a tokenURI using Base64 string as the image
+    // Returns cached value if metadata for this depth already computed
+    function getDataURI(uint256 depth) public view returns (string memory) {
+        // Otherwise compute the metadata json, encode in Base64
+        // Cache and return formatted data uri
+        string memory name = string(
+            string.concat("Zamps token depth ", Strings.toString(depth))
+        );
+        string memory description = "Zamps Business Cards";
+        string memory imageURI = string.concat(
+            _baseImageURI,
+            Strings.toString(depth),
+            ".svg"
+        );
+
+        string memory metadataJson = string.concat(
+            '{"name": "',
+            name,
+            '", ',
+            '"description": "',
+            description,
+            '", ',
+            '"image": "',
+            imageURI,
+            '"}'
+        );
+
+        return
+            string(
+                abi.encodePacked(
+                    "data:application/json;base64,",
+                    Base64.encode(bytes(metadataJson))
+                )
+            );
     }
 
     // listen to transfer event -> grab the sender and receiver -> mint business cards for receiver
@@ -75,6 +108,9 @@ contract ZampsToken is ERC721, ERC721URIStorage, Ownable, ERC721Enumerable {
         _affiliates.push(newAffilaite);
         _updateAncestors(newAffilaite.account, parentAccount);
 
+        // Set depth dependent tokenURI
+        string memory dataURI = getDataURI(depth); // cache this if depth already reached
+
         // mint a set of business cards to the receiving affiliate
         for (uint256 i = 0; i < _branchingFactor; i++) {
             require(depth <= _maxDepth, "Max depth reached");
@@ -82,12 +118,9 @@ contract ZampsToken is ERC721, ERC721URIStorage, Ownable, ERC721Enumerable {
             _tokenIdCounter.increment();
             _affiliatedTokens[newAffiliateAccount].push(tokenId);
 
-            // mint ther token
+            // mint the token
             _safeMint(newAffiliateAccount, tokenId);
-
-            // Right now the same tokenURI is used for all affiliates
-            // TODO - make this dynamic in some way?
-            _setTokenURI(tokenId, _tokenURI);
+            _setTokenURI(tokenId, dataURI);
 
             // register the token with the affiliate
             _tokenAffiliates[tokenId] = Affiliate({
@@ -102,14 +135,6 @@ contract ZampsToken is ERC721, ERC721URIStorage, Ownable, ERC721Enumerable {
         require(
             _tokenAffiliates[tokenId].account == _msgSender(),
             "Caller is not the affiliate"
-        );
-        _;
-    }
-
-    modifier onlyClient() {
-        require(
-            _clientAddress == _msgSender(),
-            "Caller is not the client that this contract was deployed for."
         );
         _;
     }
@@ -200,10 +225,29 @@ contract ZampsToken is ERC721, ERC721URIStorage, Ownable, ERC721Enumerable {
 
         for (uint256 i = ancestors.length - 1; i > 1; i--) {
             address payable ancestor = ancestors[i];
-            ancestor.transfer((payout * 8500)/ 10000);
+            ancestor.transfer((payout * 8500) / 10000);
             payout = (payout * 1500) / 10000; //still got the research about floats...
         }
     }
+
+    function addToWhitelist(address[] calldata addressesToAdd)
+        external
+        onlyOwner
+    {
+        for (uint256 i = 0; i < addressesToAdd.length; i++) {
+            distributeWhitelist[addressesToAdd[i]] = true;
+        }
+    }
+
+    function removeFromWhitelist(address[] calldata addressesToRemove)
+        external
+        onlyOwner
+    {
+        for (uint256 i = 0; i < addressesToRemove.length; i++) {
+            delete distributeWhitelist[addressesToRemove[i]];
+        }
+    }
+
     // The following are required function overrides to resolve multiple inheritance issues.
 
     function _burn(uint256 tokenId)
@@ -245,21 +289,13 @@ contract ZampsToken is ERC721, ERC721URIStorage, Ownable, ERC721Enumerable {
 //later we can take inputs and create the IPFS content url in our code
 
 contract ZampsTokenFactory {
+    mapping(address => address[]) public businessOwnersContracts;
 
-     mapping(address => address) businessOwnersContracts;
+    ZampsToken[] public tokens;
 
-        struct Token {
-            address owner;
-            address businessContract;
-        }
-
-        ZampsToken[] public tokens;
-
-    function create(string memory _metaDataUrl) public {
-
-        ZampsToken token = new ZampsToken(msg.sender, _metaDataUrl);
+    function create() public {
+        ZampsToken token = new ZampsToken(msg.sender);
         tokens.push(token);
-        businessOwnersContracts[msg.sender] = address(token);
-        
-     }
+        businessOwnersContracts[msg.sender].push(address(token));
+    }
 }
