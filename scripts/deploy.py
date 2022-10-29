@@ -2,17 +2,24 @@ import os
 
 from brownie import ZampsToken
 
-from scripts.helpers import get_deployment_accounts, is_local_blockchain
+from scripts.helpers import (
+    get_deployment_accounts,
+    is_ethereum_blockchain,
+    is_polygon_blockchain,
+)
 
 
 def deploy_contract():
-    token_uri = os.getenv("TOKEN_URI")  # If this is not set, it will be None
-    etherscan_token = os.getenv("ETHERSCAN_TOKEN")
-    should_publish = bool(etherscan_token) and not is_local_blockchain()
     zamps_account, client_account = get_deployment_accounts()
+    if is_ethereum_blockchain():
+        block_explorer_token = os.getenv("ETHERSCAN_TOKEN")
+    elif is_polygon_blockchain():
+        block_explorer_token = os.getenv("POLYGONSCAN_TOKEN")
+    else:
+        block_explorer_token = None
+    should_publish = bool(block_explorer_token)
     zamps_token_contract = ZampsToken.deploy(
         client_account.address,
-        token_uri,
         {"from": zamps_account},
         publish_source=should_publish,
     )

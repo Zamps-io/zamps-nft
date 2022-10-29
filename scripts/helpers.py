@@ -8,6 +8,10 @@ LOCAL_BLOCKCHAIN_ENVIRONMENTS = [
     "mainnet-fork",
 ]
 
+ETHEREUM_ENVIRONMENTS = ["mainnet", "ropsten", "rinkeby", "kovan", "goerli"]
+
+POLYGON_ENVIRONMENTS = ["polygon-test", "polygon-mainnet"]
+
 
 def get_deployment_accounts():
     if is_local_blockchain():
@@ -20,6 +24,14 @@ def get_deployment_accounts():
 
 def is_local_blockchain():
     return network.show_active() in LOCAL_BLOCKCHAIN_ENVIRONMENTS
+
+
+def is_ethereum_blockchain():
+    return network.show_active() in ETHEREUM_ENVIRONMENTS
+
+
+def is_polygon_blockchain():
+    return network.show_active() in POLYGON_ENVIRONMENTS
 
 
 def setup_dev_accounts(affiliate_names):
