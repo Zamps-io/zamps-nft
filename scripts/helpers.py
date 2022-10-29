@@ -1,3 +1,5 @@
+import os
+
 from brownie import accounts, config, network
 
 LOCAL_BLOCKCHAIN_ENVIRONMENTS = [
@@ -7,6 +9,10 @@ LOCAL_BLOCKCHAIN_ENVIRONMENTS = [
     "ganache-ui",
     "mainnet-fork",
 ]
+
+ETHEREUM_ENVIRONMENTS = ["mainnet", "ropsten", "rinkeby", "kovan", "goerli"]
+
+POLYGON_ENVIRONMENTS = ["polygon-test", "polygon-mainnet"]
 
 
 def get_deployment_accounts():
@@ -20,6 +26,22 @@ def get_deployment_accounts():
 
 def is_local_blockchain():
     return network.show_active() in LOCAL_BLOCKCHAIN_ENVIRONMENTS
+
+
+def is_ethereum_blockchain():
+    return network.show_active() in ETHEREUM_ENVIRONMENTS
+
+
+def is_polygon_blockchain():
+    return network.show_active() in POLYGON_ENVIRONMENTS
+
+
+def get_block_explorer_token():
+    if is_ethereum_blockchain():
+        return os.getenv("ETHERSCAN_TOKEN")
+    elif is_polygon_blockchain():
+        return os.getenv("POLYGONSCAN_TOKEN")
+    return
 
 
 def setup_dev_accounts(affiliate_names):
