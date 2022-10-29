@@ -1,3 +1,5 @@
+import os
+
 from brownie import accounts, config, network
 
 LOCAL_BLOCKCHAIN_ENVIRONMENTS = [
@@ -32,6 +34,14 @@ def is_ethereum_blockchain():
 
 def is_polygon_blockchain():
     return network.show_active() in POLYGON_ENVIRONMENTS
+
+
+def get_block_explorer_token():
+    if is_ethereum_blockchain():
+        return os.getenv("ETHERSCAN_TOKEN")
+    elif is_polygon_blockchain():
+        return os.getenv("POLYGONSCAN_TOKEN")
+    return
 
 
 def setup_dev_accounts(affiliate_names):

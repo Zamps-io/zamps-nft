@@ -1,14 +1,11 @@
-import os
-
 from brownie import ZampsTokenFactory
 
-from scripts.helpers import get_deployment_accounts, is_local_blockchain
+from scripts import helpers
 
 
 def deploy_factory_contract():
-    etherscan_token = os.getenv("ETHERSCAN_TOKEN")
-    should_publish = bool(etherscan_token) and not is_local_blockchain()
-    _, client_account = get_deployment_accounts()
+    should_publish = bool(helpers.get_block_explorer_token())
+    _, client_account = helpers.get_deployment_accounts()
     return ZampsTokenFactory.deploy(
         {"from": client_account.address}, publish_source=should_publish
     )
