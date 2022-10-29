@@ -46,3 +46,39 @@ def test_transfer_from():
     # and the newly generalted affiliate tokens
     assert zamps_token_contract.balanceOf(client) == client_token_balance - 1
     assert zamps_token_contract.balanceOf(affiliate) == DEFAULT_BRANCHING_FACTOR + 1
+
+
+def test_only_whitelisted_can_distribute():
+    # Arrange
+    dev_accounts = setup_dev_accounts(
+        ["affiliate", "whitelisted_address", "unapproved_address"]
+    )
+    zamps = dev_accounts["zamps"]
+    client = dev_accounts["client"]
+    affiliate = dev_accounts["affiliate"]
+    whitelisted_address = dev_accounts["whitelisted_address"]
+    unapproved_address = dev_accounts["unapproved_address"]
+    zamps_token_contract = ZampsToken.deploy(client, {"from": zamps})
+    zamps_token_contract.transferFrom(client, affiliate, 0, {"from": client})
+
+    # Act
+    tx = zamps_token_contract.distribute(affiliate, {"from": client, "value": 1000})
+
+    # Assert
+    assert tx.status.name == "Confirmed"  # client is whitelisted by default
+
+    # Act
+    tx = zamps_token_contract.distribute(
+        affiliate, {"from": whitelisted_address, "value": 1000}
+    )
+
+    # Assert
+    assert tx.status.name == "Confirmed"  # whitelisted address can distribute
+
+    # Act
+    tx = zamps_token_contract.distribute(
+        affiliate, {"from": unapproved_address, "value": 1000}
+    )
+
+    # Assert
+    assert tx.status.name == "Confirmed"  # non-whitelisted address cannot distribute

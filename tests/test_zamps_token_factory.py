@@ -15,5 +15,7 @@ def test_deploy_child_contract():
 
     # Assert
     assert tx.status.name == "Confirmed"
-    assert len(zamps_factory_contract.getTokens()) == 1
-    assert len(zamps_factory_contract.getBusinessOwnersContracts(client)) == 1
+    assert tx.new_contracts[0] == zamps_factory_contract.tokens(0)
+    assert tx.new_contracts[0] == zamps_factory_contract.businessOwnersContracts(
+        client, 0
+    )

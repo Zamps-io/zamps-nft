@@ -39,15 +39,13 @@ contract ZampsToken is ERC721, ERC721URIStorage, Ownable, ERC721Enumerable {
     // Mapping from addresses to their direct ancestors in the network in order (not including the contract owner account)
     mapping(address => address payable[]) private _affiliateAncestors;
 
-    address private _clientAddress; // the address of the client business that the contract was created for
-
     string private _baseImageURI =
         "https://bafybeifgbpikn4unzzewsb5p36ydmigbfqcu2pf6ap6dz4s4ckgayif2ua.ipfs.w3s.link/depth_";
 
-    constructor(address clientAccount) ERC721("ZampsToken", "ZTK") {
-        // set the client account address and tokenURI
-        _clientAddress = clientAccount;
+    // approved addresses can call distribute function
+    mapping(address => bool) public distributeWhitelist;
 
+    constructor(address clientAccount) ERC721("ZampsToken", "ZTK") {
         // mint the original set of business cards to the Zamps client account
         uint256 starting_depth = 0;
 
@@ -137,14 +135,6 @@ contract ZampsToken is ERC721, ERC721URIStorage, Ownable, ERC721Enumerable {
         require(
             _tokenAffiliates[tokenId].account == _msgSender(),
             "Caller is not the affiliate"
-        );
-        _;
-    }
-
-    modifier onlyClient() {
-        require(
-            _clientAddress == _msgSender(),
-            "Caller is not the client that this contract was deployed for."
         );
         _;
     }
@@ -240,6 +230,24 @@ contract ZampsToken is ERC721, ERC721URIStorage, Ownable, ERC721Enumerable {
         }
     }
 
+    function addToWhitelist(address[] calldata addressesToAdd)
+        external
+        onlyOwner
+    {
+        for (uint256 i = 0; i < addressesToAdd.length; i++) {
+            distributeWhitelist[addressesToAdd[i]] = true;
+        }
+    }
+
+    function removeFromWhitelist(address[] calldata addressesToRemove)
+        external
+        onlyOwner
+    {
+        for (uint256 i = 0; i < addressesToRemove.length; i++) {
+            delete distributeWhitelist[addressesToRemove[i]];
+        }
+    }
+
     // The following are required function overrides to resolve multiple inheritance issues.
 
     function _burn(uint256 tokenId)
@@ -281,25 +289,13 @@ contract ZampsToken is ERC721, ERC721URIStorage, Ownable, ERC721Enumerable {
 //later we can take inputs and create the IPFS content url in our code
 
 contract ZampsTokenFactory {
-    mapping(address => address[]) private _businessOwnersContracts;
+    mapping(address => address[]) public businessOwnersContracts;
 
-    ZampsToken[] public _tokens;
+    ZampsToken[] public tokens;
 
     function create() public {
         ZampsToken token = new ZampsToken(msg.sender);
-        _tokens.push(token);
-        _businessOwnersContracts[msg.sender].push(address(token));
-    }
-
-    function getBusinessOwnersContracts(address businessOwner)
-        public
-        view
-        returns (address[] memory)
-    {
-        return _businessOwnersContracts[businessOwner];
-    }
-
-    function getTokens() public view returns (ZampsToken[] memory) {
-        return _tokens;
+        tokens.push(token);
+        businessOwnersContracts[msg.sender].push(address(token));
     }
 }
