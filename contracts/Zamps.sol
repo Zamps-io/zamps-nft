@@ -227,7 +227,7 @@ contract ZampsToken is ERC721, ERC721URIStorage, Ownable, ERC721Enumerable {
 
     function addToWhitelist(address[] calldata addressesToAdd)
         external
-        onlyOwner
+        onlyWhitelisted
     {
         for (uint256 i = 0; i < addressesToAdd.length; i++) {
             distributeWhitelist[addressesToAdd[i]] = true;
@@ -236,7 +236,7 @@ contract ZampsToken is ERC721, ERC721URIStorage, Ownable, ERC721Enumerable {
 
     function removeFromWhitelist(address[] calldata addressesToRemove)
         external
-        onlyOwner
+        onlyWhitelisted
     {
         for (uint256 i = 0; i < addressesToRemove.length; i++) {
             delete distributeWhitelist[addressesToRemove[i]];
