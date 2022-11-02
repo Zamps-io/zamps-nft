@@ -289,13 +289,21 @@ contract ZampsToken is ERC721, ERC721URIStorage, Ownable, ERC721Enumerable {
 //later we can take inputs and create the IPFS content url in our code
 
 contract ZampsTokenFactory {
-    mapping(address => address[]) public businessOwnersContracts;
+    
+    mapping(address => address) public businessOwnersContracts;
 
     ZampsToken[] public tokens;
 
-    function create() public {
-        ZampsToken token = new ZampsToken(msg.sender);
+    event Created(address _tokenAddress);
+
+    function create(address origin) public returns(address) {
+        ZampsToken token = new ZampsToken(origin);
         tokens.push(token);
-        businessOwnersContracts[msg.sender].push(address(token));
+        businessOwnersContracts[origin] = address(token);
+        emit Created(address(token));
+    }
+
+    function getTokenAddress() public view returns(address) {
+        return businessOwnersContracts[msg.sender];
     }
 }
