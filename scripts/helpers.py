@@ -44,7 +44,7 @@ def get_block_explorer_token():
     return
 
 
-def setup_dev_accounts(affiliate_names):
+def setup_dev_accounts(affiliate_names=[]):
     required_num_accounts = len(affiliate_names) + 2
     num_accounts_to_create = required_num_accounts - len(accounts)
     for i in range(num_accounts_to_create):

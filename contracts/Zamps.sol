@@ -139,18 +139,18 @@ contract ZampsToken is ERC721, ERC721URIStorage, Ownable, ERC721Enumerable {
         _;
     }
 
-    function transferFrom(
+    function _transfer(
         address from,
         address to,
         uint256 tokenId
-    ) public override(ERC721, IERC721) onlyAffiliate(tokenId) {
+    ) internal override(ERC721) onlyAffiliate(tokenId) {
         require(
             balanceOf(to) < 1,
             "Receiving address is already an affiliate of this Zamps business network."
         );
 
         // Pass on the business card to the new affiliate
-        super.transferFrom(from, to, tokenId);
+        super._transfer(from, to, tokenId);
 
         uint256 new_depth = _tokenAffiliates[tokenId].depth + 1;
 
