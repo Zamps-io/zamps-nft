@@ -27,6 +27,9 @@ contract ZampsToken is ERC721, ERC721URIStorage, Ownable, ERC721Enumerable {
     // Array of all affiliates in the order they joined the nework
     Affiliate[] private _affiliates;
 
+    // Array of all affiliates we have to payout
+    address payable[] private  _payoffAffiliates;
+
     // Mapping from token ID to affiliate
     mapping(uint256 => Affiliate) private _tokenAffiliates;
 
@@ -38,6 +41,9 @@ contract ZampsToken is ERC721, ERC721URIStorage, Ownable, ERC721Enumerable {
 
     // Mapping from addresses to their direct ancestors in the network in order (not including the contract owner account)
     mapping(address => address payable[]) private _affiliateAncestors;
+
+    //Mapping froma address to payout balance
+    mapping(address => uint256) private _payoffBalance;
 
     string private _baseImageURI =
         "https://bafybeifgbpikn4unzzewsb5p36ydmigbfqcu2pf6ap6dz4s4ckgayif2ua.ipfs.w3s.link/depth_";
@@ -225,9 +231,19 @@ contract ZampsToken is ERC721, ERC721URIStorage, Ownable, ERC721Enumerable {
 
         for (uint256 i = ancestors.length - 1; i > 1; i--) {
             address payable ancestor = ancestors[i];
-            ancestor.transfer((payout * 8500) / 10000);
+            if(_payoffBalance[ancestor] <= 0) {
+            _payoffAffiliates.push(ancestor);
+            }
+            _payoffBalance[ancestor] += ((payout * 8500) / 10000);
             payout = (payout * 1500) / 10000; //still got the research about floats...
         }
+    }
+
+    function payout() external {
+        for(uint256 i = 0; i < _payoffAffiliates.length; i++) {
+            _payoffAffiliates[i].transfer(_payoffBalance[_payoffAffiliates[i]]);
+        }
+        delete _payoffAffiliates;
     }
 
     function addToWhitelist(address[] calldata addressesToAdd)
