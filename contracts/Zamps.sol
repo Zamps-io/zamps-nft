@@ -45,6 +45,12 @@ contract ZampsToken is ERC721, ERC721URIStorage, Ownable, ERC721Enumerable {
     // approved addresses can call distribute function
     mapping(address => bool) public distributeWhitelist;
 
+    // Array of all affiliates we have to payout
+    address payable[] private _payoffAffiliates;
+
+    //Mapping froma address to payout balance
+    mapping(address => uint256) private _payoffBalance;
+
     constructor(address clientAccount) ERC721("ZampsToken", "ZTK") {
         // mint the original set of business cards to the Zamps client account
         uint256 starting_depth = 0;
@@ -221,13 +227,24 @@ contract ZampsToken is ERC721, ERC721URIStorage, Ownable, ERC721Enumerable {
         address payable[] memory ancestors;
 
         ancestors = _affiliateAncestors[cardHolder];
-        uint256 payout = msg.value;
+        uint256 affiliate_payout = msg.value;
 
         for (uint256 i = ancestors.length - 1; i > 1; i--) {
             address payable ancestor = ancestors[i];
-            ancestor.transfer((payout * 8500) / 10000);
-            payout = (payout * 1500) / 10000; //still got the research about floats...
+            ancestor.transfer((affiliate_payout * 8500) / 10000);
+            if (_payoffBalance[ancestor] <= 0) {
+                _payoffAffiliates.push(ancestor);
+            }
+            _payoffBalance[ancestor] += ((affiliate_payout * 8500) / 10000);
+            affiliate_payout = (affiliate_payout * 1500) / 10000; //still got the research about floats...
         }
+    }
+
+    function payout() external {
+        for (uint256 i = 0; i < _payoffAffiliates.length; i++) {
+            _payoffAffiliates[i].transfer(_payoffBalance[_payoffAffiliates[i]]);
+        }
+        delete _payoffAffiliates;
     }
 
     function addToWhitelist(address[] calldata addressesToAdd)
