@@ -293,9 +293,12 @@ contract ZampsTokenFactory {
 
     ZampsToken[] public tokens;
 
-    function create() public {
-        ZampsToken token = new ZampsToken(msg.sender);
+    event Created(address _tokenAddress);
+
+    function create(address origin) public {
+        ZampsToken token = new ZampsToken(origin);
         tokens.push(token);
-        businessOwnersContracts[msg.sender].push(address(token));
+        businessOwnersContracts[origin].push(address(token));
+        emit Created(address(token));
     }
 }
