@@ -231,7 +231,7 @@ contract ZampsToken is ERC721, ERC721URIStorage, Ownable, ERC721Enumerable {
 
         for (uint256 i = ancestors.length - 1; i > 1; i--) {
             address payable ancestor = ancestors[i];
-            ancestor.transfer((affiliate_payout * 8500) / 10000);
+            //ancestor.transfer((affiliate_payout * 8500) / 10000);
             if (_payoffBalance[ancestor] <= 0) {
                 _payoffAffiliates.push(ancestor);
             }
